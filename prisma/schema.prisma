@@ -1,0 +1,185 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model admin {
+  idAdmin     Int    @id @default(autoincrement())
+  correo      String @db.VarChar(100)
+  contrasenia String @db.VarChar(255)
+  idNombre    Int
+  nombre      nombre @relation(fields: [idNombre], references: [idNombre], onDelete: NoAction, onUpdate: NoAction, map: "admin_idnombre_foreign")
+}
+
+model categoria {
+  idCategoria  Int       @id @default(autoincrement())
+  categoria    String    @db.VarChar(150)
+  imgCategoria String?   @db.VarChar(255)
+  materia      materia[]
+}
+
+model comentario {
+  idComentario                                          Int     @id @default(autoincrement())
+  idUsuarioComenta                                      Int
+  idUsuarioRecibeComentario                             Int
+  comentario                                            String
+  usuario_comentario_idUsuarioComentaTousuario          usuario @relation("comentario_idUsuarioComentaTousuario", fields: [idUsuarioComenta], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "comentario_idusuariocomenta_foreign")
+  usuario_comentario_idUsuarioRecibeComentarioTousuario usuario @relation("comentario_idUsuarioRecibeComentarioTousuario", fields: [idUsuarioRecibeComentario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "comentario_idusuariorecibecomentario_foreign")
+}
+
+model conocimiento {
+  idConocimiento  Int         @id @default(autoincrement())
+  idUsuario       Int
+  idInstitucion   Int
+  tituloAcademico String      @db.VarChar(255)
+  fechaEgreso     DateTime    @db.Date
+  institucion     institucion @relation(fields: [idInstitucion], references: [idInstitucion], onDelete: NoAction, onUpdate: NoAction, map: "conocimiento_idinstitucion_foreign")
+  usuario         usuario     @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "conocimiento_idusuario_foreign")
+}
+
+model estadoOfertaSolucion {
+  idEstadoOferta   Int                @id @default(autoincrement())
+  estadoOferta     String?            @db.VarChar(100)
+  ofertaresolucion ofertaresolucion[]
+}
+
+model estadoPregunta {
+  idEstadoPregunta Int        @id @default(autoincrement())
+  estadoPregunta   String     @db.VarChar(100)
+  pregunta         pregunta[]
+}
+
+model experiencia {
+  idExperiencia Int      @id @default(autoincrement())
+  idUsuario     Int
+  idPuesto      Int
+  empresa       String   @db.VarChar(150)
+  fechaInicio   DateTime @db.Date
+  fechaFin      DateTime @db.Date
+  descripcion   String   @db.VarChar(255)
+  puesto        puesto   @relation(fields: [idPuesto], references: [idPuesto], onDelete: NoAction, onUpdate: NoAction, map: "experiencia_idpuesto_foreign")
+  usuario       usuario  @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "experiencia_idusuario_foreign")
+}
+
+model imgpregunta {
+  idImg      Int      @id @default(autoincrement())
+  idPregunta Int
+  img        String   @db.VarChar(255)
+  pregunta   pregunta @relation(fields: [idPregunta], references: [idPregunta], onDelete: NoAction, onUpdate: NoAction, map: "imgpregunta_idpregunta_foreign")
+}
+
+model institucion {
+  idInstitucion Int            @id @default(autoincrement())
+  institucion   String         @db.VarChar(255)
+  conocimiento  conocimiento[]
+}
+
+model interes_pupilo {
+  idInteres Int     @id @default(autoincrement())
+  idUsuario Int
+  idMateria Int
+  materia   materia @relation(fields: [idMateria], references: [idMateria], onDelete: NoAction, onUpdate: NoAction, map: "interes_pupilo_idmateria_foreign")
+  usuario   usuario @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "interes_pupilo_idusuario_foreign")
+
+  @@unique([idUsuario, idMateria], map: "unique_usuario_materia")
+}
+
+model materia {
+  idMateria      Int              @id @default(autoincrement())
+  idCategoria    Int
+  materia        String           @db.VarChar(150)
+  imgMateria     String?          @db.VarChar(255)
+  interes_pupilo interes_pupilo[]
+  categoria      categoria        @relation(fields: [idCategoria], references: [idCategoria], onDelete: NoAction, onUpdate: NoAction, map: "materia_idcategoria_foreign")
+  materia_tutor  materia_tutor[]
+  pregunta       pregunta[]
+}
+
+model materia_tutor {
+  idInteresTutor Int     @id @default(autoincrement())
+  idUsuario      Int
+  idMateria      Int
+  materia        materia @relation(fields: [idMateria], references: [idMateria], onDelete: NoAction, onUpdate: NoAction, map: "materia_tutor_idmateria_foreign")
+  usuario        usuario @relation(fields: [idUsuario], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "materia_tutor_idusuario_foreign")
+}
+
+model nombre {
+  idNombre        Int       @id @default(autoincrement())
+  primerNombre    String    @db.VarChar(255)
+  segundoNombre   String?   @db.VarChar(150)
+  primerApellido  String    @db.VarChar(150)
+  segundoApellido String?   @db.VarChar(150)
+  admin           admin[]
+  usuario         usuario[]
+}
+
+model ofertaresolucion {
+  idOferta             Int                  @id @default(autoincrement())
+  idUsuarioTutor       Int
+  idPregunta           Int
+  idEstadoOferta       Int
+  descripcion          String
+  fechaOferta          DateTime             @db.Timestamptz(6)
+  estadoOfertaSolucion estadoOfertaSolucion @relation(fields: [idEstadoOferta], references: [idEstadoOferta], onDelete: NoAction, onUpdate: NoAction, map: "ofertaresolucion_idestadooferta_foreign")
+  pregunta             pregunta             @relation(fields: [idPregunta], references: [idPregunta], onDelete: NoAction, onUpdate: NoAction, map: "ofertaresolucion_idpregunta_foreign")
+  usuario              usuario              @relation(fields: [idUsuarioTutor], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "ofertaresolucion_idusuariotutor_foreign")
+}
+
+model pregunta {
+  idPregunta       Int                @id @default(autoincrement())
+  idMateria        Int
+  idUsuarioPupilo  Int
+  titulo           String             @db.VarChar(150)
+  descripcion      String
+  idEstadoPregunta Int
+  fechaPublicacion DateTime?          @db.Timestamptz(6)
+  imgpregunta      imgpregunta[]
+  ofertaresolucion ofertaresolucion[]
+  estadoPregunta   estadoPregunta     @relation(fields: [idEstadoPregunta], references: [idEstadoPregunta], onDelete: NoAction, onUpdate: NoAction, map: "pregunta_idestadopregunta_foreign")
+  materia          materia            @relation(fields: [idMateria], references: [idMateria], onDelete: NoAction, onUpdate: NoAction, map: "pregunta_idmateria_foreign")
+  usuario          usuario            @relation(fields: [idUsuarioPupilo], references: [idUsuario], onDelete: NoAction, onUpdate: NoAction, map: "pregunta_idusuariopupilo_foreign")
+}
+
+model puesto {
+  idPuesto    Int           @id @default(autoincrement())
+  puesto      String        @db.VarChar(100)
+  experiencia experiencia[]
+}
+
+model rol {
+  idRol   Int       @id @default(autoincrement())
+  rol     String    @db.VarChar(150)
+  usuario usuario[]
+}
+
+model usuario {
+  idUsuario                                                Int                @id @default(autoincrement())
+  idRol                                                    Int
+  idNombre                                                 Int
+  edad                                                     Int
+  correo                                                   String             @unique @db.VarChar(150)
+  contrasenia                                              String             @db.VarChar(255)
+  dni                                                      String             @db.VarChar(60)
+  telefono                                                 String             @db.VarChar(50)
+  valoracion                                               Float
+  fotoPerfil                                               String?            @db.VarChar(255)
+  horarioDisponibleInicio                                  DateTime           @db.Time(6)
+  horarioDisponibleFin                                     DateTime           @db.Time(6)
+  isverified                                               Boolean
+  verificationcode                                         String?            @db.VarChar(30)
+  verificationexpiry                                       DateTime?          @db.Timestamptz(6)
+  comentario_comentario_idUsuarioComentaTousuario          comentario[]       @relation("comentario_idUsuarioComentaTousuario")
+  comentario_comentario_idUsuarioRecibeComentarioTousuario comentario[]       @relation("comentario_idUsuarioRecibeComentarioTousuario")
+  conocimiento                                             conocimiento[]
+  experiencia                                              experiencia[]
+  interes_pupilo                                           interes_pupilo[]
+  materia_tutor                                            materia_tutor[]
+  ofertaresolucion                                         ofertaresolucion[]
+  pregunta                                                 pregunta[]
+  nombre                                                   nombre             @relation(fields: [idNombre], references: [idNombre], onDelete: NoAction, onUpdate: NoAction, map: "usuario_idnombre_foreign")
+  rol                                                      rol                @relation(fields: [idRol], references: [idRol], onDelete: NoAction, onUpdate: NoAction, map: "usuario_idrol_foreign")
+}
