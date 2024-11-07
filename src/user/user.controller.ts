@@ -1,4 +1,4 @@
-import { Body, Controller, Get, HttpCode, Param, Patch, Post, Req, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
+import { Body, Controller, Get, HttpCode, Param, Patch, Post, Req, UploadedFile, UploadedFiles, UseGuards, UseInterceptors } from '@nestjs/common';
 import { UserService } from './user.service';
 import { JwtAuthGuard } from 'src/auth/guards/jwt.guard';
 import { Request } from 'express';
@@ -6,7 +6,8 @@ import { JwtPayload } from 'src/interfaces/JwtPayload';
 import { PreguntaDto } from './dto/pregunta.dto';
 import { OfertaPreguntaDto } from './dto/oferta-pregunta.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { AceptarOfertaDto } from './dto/aceptar-oferta.dto';
 
 @Controller('user')
 export class UserController {
@@ -78,5 +79,28 @@ export class UserController {
     const user = req.user as JwtPayload;
 
     return await this.userService.obtenerPreguntasInteresTutor(user.sub);
+  }
+  // Get questions with accepted offer
+   @Get("/pregunta/tutor/oferta-aceptada")
+   @UseGuards(JwtAuthGuard)
+   async obtenerPreguntasOfertaAceptada(@Req() req: Request){
+     const user = req.user as JwtPayload;
+
+     return await this.userService.obtenerPreguntasOfertaAceptada(user.sub, user.rol);
+  }
+
+  @Patch("/pregunta/aceptar-oferta")
+  @UseGuards(JwtAuthGuard)
+  async acceptOfferQuestion(@Body() aceptarOfertaDto: AceptarOfertaDto){
+    return this.userService.acceptOfferQuestion(aceptarOfertaDto);
+  }
+
+  @Patch("/update-profile-foto")
+  @UseGuards(JwtAuthGuard)
+  @UseInterceptors(FileInterceptor('file'))
+  async updateProfilePhoto(@Req() req:Request,@UploadedFile() file: Express.Multer.File){
+    const user = req.user as JwtPayload;
+
+    return this.userService.updateProfilePhoto(user.sub, file);
   }
 }
